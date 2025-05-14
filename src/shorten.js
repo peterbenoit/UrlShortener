@@ -72,9 +72,13 @@ function generateShortId(normalizedUrl) {
 	return shortId.slice(0, 8)
 }
 
+// In-memory mapping: { shortId: originalUrl }
+const shortIdMap = {}
+
 /**
  * Construct a short URL for the given original URL.
  * Returns the original if it is already shorter than the short version.
+ * Stores the mapping in-memory for redirect.
  * @param {string} originalUrl
  * @param {string} [shortDomain] - Optional override for the short domain
  * @returns {string|Error} - Short URL or original if shorter, or Error if invalid
@@ -88,7 +92,22 @@ function getShortUrl(originalUrl, shortDomain) {
 	if (typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
 		return originalUrl
 	}
+	// Store mapping for this session
+	shortIdMap[shortId] = originalUrl
+	// Optional: log mapping
+	if (process.env.NODE_ENV !== 'test') {
+		console.log(`[shorten] Mapped ${shortId} -> ${originalUrl}`)
+	}
 	return shortUrl
+}
+
+/**
+ * Resolve a shortId to the original URL if it exists in memory.
+ * @param {string} shortId
+ * @returns {string|null}
+ */
+function resolveShortId(shortId) {
+	return shortIdMap[shortId] || null
 }
 
 module.exports = {
@@ -96,7 +115,8 @@ module.exports = {
 	generateShortId,
 	base62Encode,
 	BASE62_CHARS,
-	getShortUrl
+	getShortUrl,
+	resolveShortId
 }
 
 // Simple test output (remove or comment out in production)
