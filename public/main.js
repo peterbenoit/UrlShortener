@@ -22,7 +22,7 @@ function initShortenForm() {
 		}
 		resultDiv.textContent = 'Shortening...'
 		try {
-			const resp = await fetch('/shorten', {
+			const resp = await fetch('/api/shorten', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ url })
