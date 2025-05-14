@@ -72,7 +72,32 @@ function generateShortId(normalizedUrl) {
 	return shortId.slice(0, 8)
 }
 
-module.exports = { cleanAndValidateUrl, generateShortId, base62Encode, BASE62_CHARS }
+/**
+ * Construct a short URL for the given original URL.
+ * Returns the original if it is already shorter than the short version.
+ * @param {string} originalUrl
+ * @param {string} [shortDomain] - Optional override for the short domain
+ * @returns {string|Error} - Short URL or original if shorter, or Error if invalid
+ */
+function getShortUrl(originalUrl, shortDomain) {
+	const SHORT_DOMAIN = (shortDomain || 'https://short.ly').replace(/\/+$/, '')
+	const cleaned = cleanAndValidateUrl(originalUrl)
+	if (cleaned instanceof Error) return cleaned
+	const shortId = generateShortId(cleaned)
+	const shortUrl = SHORT_DOMAIN + '/' + shortId
+	if (typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
+		return originalUrl
+	}
+	return shortUrl
+}
+
+module.exports = {
+	cleanAndValidateUrl,
+	generateShortId,
+	base62Encode,
+	BASE62_CHARS,
+	getShortUrl
+}
 
 // Simple test output (remove or comment out in production)
 if (require.main === module) {
