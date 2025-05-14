@@ -19,6 +19,13 @@ module.exports = async (req, res) => {
 		res.writeHead(302, { Location: url })
 		res.end()
 	} else {
-		res.status(404).json({ error: 'Not found' })
+		// Serve index.html with an invalid url message
+		const fs = require('fs')
+		const path = require('path')
+		const indexPath = path.join(__dirname, '../public/index.html')
+		let html = fs.readFileSync(indexPath, 'utf8')
+		// Inject a message into the page (simple, non-intrusive)
+		html = html.replace('<body>', '<body><div id="shorten-result" style="color:red;text-align:center;margin:1em;">Invalid or expired short URL.</div>')
+		res.status(200).setHeader('Content-Type', 'text/html').end(html)
 	}
 }
