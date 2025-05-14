@@ -36,6 +36,7 @@ app.get('/:shortId', (req, res, next) => {
 
 // POST /shorten endpoint
 app.post('/shorten', (req, res) => {
+	console.log('[shorten] body:', req.body)
 	const { url } = req.body || {}
 	if (!url || typeof url !== 'string') {
 		return res.status(400).json({ error: 'Missing or invalid URL.' })
