@@ -24,7 +24,8 @@ module.exports = async (req, res) => {
 	}
 
 	try {
-		const shortUrl = getShortUrl(url)
+		// Now properly await the async function
+		const shortUrl = await getShortUrl(url)
 		res.status(200).json({ shortUrl })
 	} catch (e) {
 		res.status(500).json({ error: e.message })

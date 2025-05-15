@@ -28,11 +28,13 @@ app.get('/', (req, res) => {
 })
 
 // Short URL redirect route (must not conflict with static files or root)
-app.get('/:shortId', (req, res, next) => {
+app.get('/:shortId', async (req, res, next) => {
 	try {
 		const { shortId } = req.params
 		if (!/^[a-zA-Z0-9]{6,8}$/.test(shortId)) return next()
-		const originalUrl = resolveShortId(shortId)
+
+		// Now using async/await with the updated resolveShortId function
+		const originalUrl = await resolveShortId(shortId)
 		if (originalUrl) {
 			console.log(`[redirect] ${shortId} -> ${originalUrl}`)
 			return res.redirect(302, originalUrl)
@@ -46,7 +48,7 @@ app.get('/:shortId', (req, res, next) => {
 })
 
 // POST /shorten endpoint
-app.post('/shorten', (req, res) => {
+app.post('/shorten', async (req, res) => {
 	try {
 		console.log('[shorten] body:', req.body)
 		const { url } = req.body || {}
@@ -59,7 +61,9 @@ app.post('/shorten', (req, res) => {
 			console.warn(`[${new Date().toISOString()}] [400] Malformed URL:`, url)
 			return res.status(400).json({ error: 'Malformed URL.' })
 		}
-		const shortUrl = getShortUrl(url)
+
+		// Now using async/await with the updated getShortUrl function
+		const shortUrl = await getShortUrl(url)
 		if (shortUrl instanceof Error) {
 			console.warn(`[${new Date().toISOString()}] [400] URL validation failed:`, shortUrl.message)
 			return res.status(400).json({ error: shortUrl.message })
@@ -77,8 +81,6 @@ app.use((req, res) => {
 	console.warn(`[${new Date().toISOString()}] [400] Bad request: ${req.method} ${req.url}`)
 	res.status(400).type('json').send({ error: 'Bad request: Invalid short URL format' })
 })
-
-// Placeholder for future API routes
 
 app.listen(PORT, () => {
 	console.log(`Server running at http://localhost:${PORT}`)

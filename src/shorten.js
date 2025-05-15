@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const { kv } = require('@vercel/kv')
 
 /**
  * Clean and validate a URL for consistent hashing.
@@ -72,18 +73,18 @@ function generateShortId(normalizedUrl) {
 	return shortId.slice(0, 8)
 }
 
-// In-memory mapping: { shortId: originalUrl }
+// In-memory mapping (kept as fallback)
 const shortIdMap = {}
 
 /**
  * Construct a short URL for the given original URL.
  * Returns the original if it is already shorter than the short version.
- * Stores the mapping in-memory for redirect.
+ * Stores the mapping in Vercel KV for persistence.
  * @param {string} originalUrl
  * @param {string} [shortDomain] - Optional override for the short domain
- * @returns {string|Error} - Short URL or original if shorter, or Error if invalid
+ * @returns {Promise<string|Error>} - Short URL or original if shorter, or Error if invalid
  */
-function getShortUrl(originalUrl, shortDomain) {
+async function getShortUrl(originalUrl, shortDomain) {
 	const SHORT_DOMAIN = (shortDomain || 'https://sml-nu.vercel.app/').replace(/\/+$/, '')
 	const cleaned = cleanAndValidateUrl(originalUrl)
 	if (cleaned instanceof Error) return cleaned
@@ -92,22 +93,45 @@ function getShortUrl(originalUrl, shortDomain) {
 	if (typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
 		return originalUrl
 	}
-	// Store mapping for this session
-	shortIdMap[shortId] = originalUrl
-	// Optional: log mapping
-	if (process.env.NODE_ENV !== 'test') {
-		console.log(`[shorten] Mapped ${shortId} -> ${originalUrl}`)
+
+	try {
+		// Store mapping in Vercel KV
+		await kv.set(shortId, originalUrl)
+
+		// Also keep in memory as fallback
+		shortIdMap[shortId] = originalUrl
+
+		// Optional: log mapping
+		if (process.env.NODE_ENV !== 'test') {
+			console.log(`[shorten] Mapped ${shortId} -> ${originalUrl}`)
+		}
+		return shortUrl
+	} catch (err) {
+		console.error(`[KV error] Failed to store mapping: ${err.message}`)
+		// Fallback to in-memory if KV fails
+		shortIdMap[shortId] = originalUrl
+		return shortUrl
 	}
-	return shortUrl
 }
 
 /**
- * Resolve a shortId to the original URL if it exists in memory.
+ * Resolve a shortId to the original URL from Vercel KV or in-memory fallback.
  * @param {string} shortId
- * @returns {string|null}
+ * @returns {Promise<string|null>}
  */
-function resolveShortId(shortId) {
-	return shortIdMap[shortId] || null
+async function resolveShortId(shortId) {
+	try {
+		// Try to get from Vercel KV first
+		const url = await kv.get(shortId)
+		if (url) return url
+
+		// Fall back to in-memory if not in KV
+		return shortIdMap[shortId] || null
+	} catch (err) {
+		console.error(`[KV error] Failed to retrieve mapping: ${err.message}`)
+		// Fall back to in-memory on KV error
+		return shortIdMap[shortId] || null
+	}
 }
 
 module.exports = {
