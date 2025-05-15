@@ -84,7 +84,7 @@ const shortIdMap = {}
  * @returns {string|Error} - Short URL or original if shorter, or Error if invalid
  */
 function getShortUrl(originalUrl, shortDomain) {
-	const SHORT_DOMAIN = (shortDomain || 'https://short.ly').replace(/\/+$/, '')
+	const SHORT_DOMAIN = (shortDomain || 'https://sml-nu.vercel.app/').replace(/\/+$/, '')
 	const cleaned = cleanAndValidateUrl(originalUrl)
 	if (cleaned instanceof Error) return cleaned
 	const shortId = generateShortId(cleaned)
