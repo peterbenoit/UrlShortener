@@ -134,6 +134,8 @@ async function resolveShortId(shortId) {
 	}
 }
 
+
+// Export functions for use in API routes
 module.exports = {
 	cleanAndValidateUrl,
 	generateShortId,
