@@ -71,7 +71,7 @@ function displayResult(container, shortUrl) {
 	// Success message (hidden initially)
 	const successMsg = document.createElement('div')
 	successMsg.className = 'share-success'
-	successMsg.textContent = 'Copied to clipboard!'
+	successMsg.textContent = 'Copied!'
 	shareDiv.appendChild(successMsg)
 
 	container.appendChild(shareDiv)
