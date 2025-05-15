@@ -54,6 +54,30 @@
                 font-weight: bold;
                 color: var(--primary);
             }
+            .share-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+            .copy-button {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.3rem;
+                cursor: pointer;
+                font-size: 0.9rem;
+                padding: 0.3rem 0.7rem;
+            }
+            .share-success {
+                color: #2ecc71;
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+            .share-success.visible {
+                opacity: 1;
+            }
             footer {
                 text-align: center;
                 margin-top: 2rem;
