@@ -17,6 +17,17 @@ app.use((req, res, next) => {
 // Parse JSON bodies
 app.use(express.json())
 
+// Add CORS middleware for API endpoints
+app.use('/shorten', (req, res, next) => {
+	res.header('Access-Control-Allow-Origin', '*')
+	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+	res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+	if (req.method === 'OPTIONS') {
+		return res.status(200).end()
+	}
+	next()
+})
+
 // Homepage route
 app.get('/', (req, res) => {
 	try {

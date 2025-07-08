@@ -9,6 +9,18 @@ const { getShortUrl } = require('../src/shorten.js')
  * @param {import('vercel').VercelResponse} res
  */
 module.exports = async (req, res) => {
+	// Enable CORS for API clients
+	res.setHeader('Access-Control-Allow-Credentials', 'true')
+	res.setHeader('Access-Control-Allow-Origin', '*')
+	res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+	res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version')
+
+	// Handle preflight OPTIONS request
+	if (req.method === 'OPTIONS') {
+		res.status(200).end()
+		return
+	}
+
 	if (req.method !== 'POST') {
 		res.status(405).json({ error: 'Method Not Allowed' })
 		return
