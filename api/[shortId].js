@@ -2,12 +2,38 @@
 // Redirects to original URL or returns 404
 
 const { resolveShortId } = require('../src/shorten.js')
+const { checkRateLimit, getRateLimitInfo } = require('../src/rateLimit.js')
 
 /**
  * @param {import('vercel').VercelRequest} req
  * @param {import('vercel').VercelResponse} res
  */
 module.exports = async (req, res) => {
+	// Get client IP address or API key
+	const clientId = (req.headers['x-api-key']) ||
+		req.headers['x-forwarded-for'] ||
+		req.connection.remoteAddress ||
+		'unknown-ip'
+
+	// Check rate limit (30 requests per minute for redirects by default,
+	// but API clients and trusted referrers get higher limits)
+	const isAllowed = checkRateLimit(clientId, 30, req)
+
+	// Get rate limit headers
+	const rateLimitInfo = getRateLimitInfo(clientId, 30, req)
+
+	// Add rate limit headers
+	res.setHeader('X-RateLimit-Limit', rateLimitInfo.limit.toString())
+	res.setHeader('X-RateLimit-Remaining', rateLimitInfo.remaining.toString())
+	res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimitInfo.reset / 1000).toString())
+
+	if (!isAllowed) {
+		return res.status(429).json({
+			error: 'Rate limit exceeded. Try again later.',
+			retryAfter: Math.ceil((rateLimitInfo.reset - Date.now()) / 1000)
+		})
+	}
+
 	const shortId = req.query.shortId
 	if (!shortId) {
 		res.status(400).json({ error: 'Missing shortId' })
@@ -15,7 +41,6 @@ module.exports = async (req, res) => {
 	}
 
 	try {
-		// Now properly await the async function
 		const url = await resolveShortId(shortId)
 		if (url) {
 			res.writeHead(302, { Location: url })
@@ -26,7 +51,6 @@ module.exports = async (req, res) => {
 			const path = require('path')
 			const indexPath = path.join(__dirname, '../public/index.html')
 			let html = fs.readFileSync(indexPath, 'utf8')
-			// Inject a message into the page (simple, non-intrusive)
 			html = html.replace('<body>', '<body><div id="shorten-result" style="color:red;text-align:center;margin:1em;">Invalid or expired short URL.</div>')
 			res.status(200).setHeader('Content-Type', 'text/html').end(html)
 		}

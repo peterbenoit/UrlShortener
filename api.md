@@ -98,8 +98,33 @@ print(data['shortUrl'])
 
 ## Rate Limits
 
-For fair usage, the API might have rate limits in place. Please use the service
-responsibly.
+For fair usage, the API has the following rate limits:
+
+- **URL Shortening**: 10 requests per minute per IP address
+- **URL Redirects**: 30 requests per minute per IP address
+
+When a rate limit is reached, the API will respond with a
+`429 Too Many Requests` status code.
+
+### Rate Limit Headers
+
+The API includes the following headers in each response:
+
+- `X-RateLimit-Limit`: Maximum number of requests allowed per minute
+- `X-RateLimit-Remaining`: Number of requests remaining in the current window
+- `X-RateLimit-Reset`: Unix timestamp when the rate limit window resets
+
+### Example Rate Limit Response:
+
+```json
+{
+	"error": "Rate limit exceeded. Try again later.",
+	"retryAfter": 25
+}
+```
+
+The `retryAfter` field indicates the number of seconds until the rate limit
+resets.
 
 ## Notes
 
