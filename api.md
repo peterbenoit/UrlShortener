@@ -27,7 +27,7 @@ Creates a shortened URL from a long URL.
 
 ```json
 {
-	"shortUrl": "https://snawl.vercel.app/abc123"
+	"shortUrl": "https://smawl.vercel.app/abc123"
 }
 ```
 
@@ -44,14 +44,14 @@ Creates a shortened URL from a long URL.
 ### Using cURL
 
 ```bash
-curl -X POST https://snawl.vercel.app/api/shorten \
+curl -X POST https://smawl.vercel.app/api/shorten \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com/very/long/path"}'
 ```
 
 ### Using Postman
 
-1. Create a new POST request to `https://snawl.vercel.app/api/shorten`
+1. Create a new POST request to `https://smawl.vercel.app/api/shorten`
 2. Set the header `Content-Type: application/json`
 3. In the Body tab, select "raw" and choose "JSON" format
 4. Enter the request body:
@@ -66,7 +66,7 @@ curl -X POST https://snawl.vercel.app/api/shorten \
 
 ```javascript
 const response = await fetch(
-	"https://snawl.vercel.app/api/shorten",
+	"https://smawl.vercel.app/api/shorten",
 	{
 		method: "POST",
 		headers: {
@@ -88,7 +88,7 @@ console.log(data.shortUrl);
 import requests
 
 response = requests.post(
-    'https://snawl.vercel.app/api/shorten',
+    'https://smawl.vercel.app/api/shorten',
     json={'url': 'https://example.com/very/long/path'}
 )
 
