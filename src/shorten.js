@@ -85,7 +85,7 @@ const shortIdMap = {}
  * @returns {Promise<string|Error>} - Short URL or original if shorter, or Error if invalid
  */
 async function getShortUrl(originalUrl, shortDomain) {
-	const SHORT_DOMAIN = (shortDomain || 'https://sml-nu.vercel.app/').replace(/\/+$/, '')
+	const SHORT_DOMAIN = (shortDomain || 'https://smawl.vercel.app/').replace(/\/+$/, '')
 	const cleaned = cleanAndValidateUrl(originalUrl)
 	if (cleaned instanceof Error) return cleaned
 	const shortId = generateShortId(cleaned)
