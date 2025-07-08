@@ -39,6 +39,7 @@ const whitelist = new Set([
 const trustedReferrers = new Set([
 	// Add domains of your own applications
 	// e.g., 'yourapp.com', 'your-other-app.vercel.app'
+	'routeguide.vercel.app/'
 ])
 
 /**
