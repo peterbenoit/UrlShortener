@@ -62,7 +62,7 @@ app.get('/:shortId', async (req, res, next) => {
 app.post('/shorten', async (req, res) => {
 	try {
 		console.log('[shorten] body:', req.body)
-		const { url } = req.body || {}
+		const { url, customId } = req.body || {}
 		if (!url || typeof url !== 'string') {
 			console.warn(`[${new Date().toISOString()}] [400] Invalid or missing URL field:`, url)
 			return res.status(400).json({ error: 'Missing or invalid URL.' })
@@ -74,7 +74,7 @@ app.post('/shorten', async (req, res) => {
 		}
 
 		// Now using async/await with the updated getShortUrl function
-		const shortUrl = await getShortUrl(url)
+		const shortUrl = await getShortUrl(url, undefined, customId)
 		if (shortUrl instanceof Error) {
 			console.warn(`[${new Date().toISOString()}] [400] URL validation failed:`, shortUrl.message)
 			return res.status(400).json({ error: shortUrl.message })

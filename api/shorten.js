@@ -52,9 +52,10 @@ module.exports = async (req, res) => {
 		return
 	}
 
-	let url
+	let url, customId
 	try {
 		url = req.body && req.body.url
+		customId = req.body && req.body.customId
 		if (!url) throw new Error('Missing url')
 	} catch (e) {
 		res.status(400).json({ error: 'Invalid request body' })
@@ -63,7 +64,10 @@ module.exports = async (req, res) => {
 
 	try {
 		// Now properly await the async function
-		const shortUrl = await getShortUrl(url)
+		const shortUrl = await getShortUrl(url, undefined, customId)
+		if (shortUrl instanceof Error) {
+			return res.status(400).json({ error: shortUrl.message })
+		}
 		res.status(200).json({ shortUrl })
 	} catch (e) {
 		res.status(500).json({ error: e.message })

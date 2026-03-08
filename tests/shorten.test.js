@@ -112,4 +112,36 @@ describe('shorten.js utilities', () => {
             expect(kv.set).not.toHaveBeenCalled();
         });
     });
+
+    describe('getShortUrl with customId', () => {
+        it('should reject invalid custom IDs', async () => {
+            const res1 = await getShortUrl('https://example.com', undefined, 'a!');
+            expect(res1).toBeInstanceOf(Error);
+            const res2 = await getShortUrl('https://example.com', undefined, 'ab'); // Too short
+            expect(res2).toBeInstanceOf(Error);
+            const res3 = await getShortUrl('https://example.com', undefined, 'abcdefghijkl'); // Too long
+            expect(res3).toBeInstanceOf(Error);
+        });
+
+        it('should create a short URL with exactly the valid custom ID', async () => {
+            kv.get.mockResolvedValueOnce(null); // free slot
+            const result = await getShortUrl('https://valid.com', undefined, 'myAlias123');
+            expect(kv.set).toHaveBeenCalledTimes(1);
+            expect(result).toMatch(/\/myAlias123$/);
+        });
+
+        it('should reject a custom ID if it is already taken by a different URL', async () => {
+            kv.get.mockResolvedValueOnce('https://someone-else.com');
+            const result = await getShortUrl('https://valid.com', undefined, 'myAlias123');
+            expect(result).toBeInstanceOf(Error);
+            expect(result.message).toMatch(/taken/i);
+        });
+
+        it('should succeed idempotently if custom ID is requested for the exact same URL again', async () => {
+            kv.get.mockResolvedValueOnce('https://valid.com');
+            const result = await getShortUrl('https://valid.com', undefined, 'myAlias123');
+            expect(kv.set).not.toHaveBeenCalled(); // No need to overwrite
+            expect(result).toMatch(/\/myAlias123$/);
+        });
+    });
 });

@@ -12,6 +12,25 @@ function initShortenForm() {
 		resultDiv.id = 'shorten-result'
 		form.insertAdjacentElement('afterend', resultDiv)
 	}
+
+	const toggleCb = document.getElementById('use-custom-id')
+	const customContainer = document.getElementById('custom-id-container')
+	const customInput = document.getElementById('custom-id-input')
+
+	if (toggleCb && customContainer) {
+		toggleCb.addEventListener('change', (e) => {
+			if (e.target.checked) {
+				customContainer.classList.add('visible')
+				customInput.required = true
+				customInput.focus()
+			} else {
+				customContainer.classList.remove('visible')
+				customInput.required = false
+				customInput.value = ''
+			}
+		})
+	}
+
 	form.addEventListener('submit', async function (e) {
 		e.preventDefault()
 		const url = input.value.trim()
@@ -21,11 +40,18 @@ function initShortenForm() {
 			return
 		}
 		resultDiv.textContent = 'Shortening...'
+
+		const payload = { url }
+		if (toggleCb && toggleCb.checked) {
+			const cId = customInput.value.trim()
+			if (cId) payload.customId = cId
+		}
+
 		try {
 			const resp = await fetch('/api/shorten', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ url })
+				body: JSON.stringify(payload)
 			})
 			const data = await resp.json()
 			if (resp.ok && data.shortUrl) {

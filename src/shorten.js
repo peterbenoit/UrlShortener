@@ -81,34 +81,58 @@ const shortIdMap = {}
  * Stores the mapping in Vercel KV for persistence.
  * @param {string} originalUrl
  * @param {string} [shortDomain] - Optional override for the short domain
+ * @param {string} [customId] - Optional custom alias constraint
  * @returns {Promise<string|Error>} - Short URL or original if shorter, or Error if invalid
  */
-async function getShortUrl(originalUrl, shortDomain) {
+async function getShortUrl(originalUrl, shortDomain, customId) {
 	const SHORT_DOMAIN = (shortDomain || 'https://smawl.vercel.app/').replace(/\/+$/, '')
 	const cleaned = cleanAndValidateUrl(originalUrl)
 	if (cleaned instanceof Error) return cleaned
-	let shortId = generateShortId(cleaned)
+
+	let shortId;
+	if (customId) {
+		if (typeof customId !== 'string' || !/^[a-zA-Z0-9]{3,10}$/.test(customId)) {
+			return new Error('Custom ID must be 3-10 alphanumeric characters')
+		}
+		shortId = customId;
+	} else {
+		shortId = generateShortId(cleaned);
+	}
+
 	let shortUrl = SHORT_DOMAIN + '/' + shortId
-	if (typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
+	if (!customId && typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
 		return originalUrl
 	}
 
 	try {
-		let attempts = 0
-		let hashInput = cleaned
-		while (attempts < 5) {
+		// Custom ID Logic
+		if (customId) {
 			const existingUrl = await resolveShortId(shortId)
-			if (!existingUrl) {
-				break // Available slot
+			if (existingUrl) {
+				if (existingUrl === originalUrl) {
+					return shortUrl // Exact match already exists, reuse it.
+				} else {
+					return new Error('Custom ID has already been taken')
+				}
 			}
-			if (existingUrl === originalUrl) {
-				return shortUrl // Already exists exactly
+			// Hash Collision Logic
+		} else {
+			let attempts = 0
+			let hashInput = cleaned
+			while (attempts < 5) {
+				const existingUrl = await resolveShortId(shortId)
+				if (!existingUrl) {
+					break // Available slot
+				}
+				if (existingUrl === originalUrl) {
+					return shortUrl // Already exists exactly
+				}
+				// Collision!
+				attempts++
+				hashInput = cleaned + '#' + attempts
+				shortId = generateShortId(hashInput)
+				shortUrl = SHORT_DOMAIN + '/' + shortId
 			}
-			// Collision!
-			attempts++
-			hashInput = cleaned + '#' + attempts
-			shortId = generateShortId(hashInput)
-			shortUrl = SHORT_DOMAIN + '/' + shortId
 		}
 
 		// Store mapping in Vercel KV

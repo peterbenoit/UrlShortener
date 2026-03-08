@@ -79,6 +79,19 @@
             .share-success.visible {
                 opacity: 1;
             }
+            .custom-id-container {
+                display: none;
+                margin-top: 1rem;
+                grid-column: 1 / -1;
+            }
+            .custom-id-container.visible {
+                display: block;
+            }
+            .custom-id-toggle {
+                margin-top: 1rem;
+                grid-column: 1 / -1;
+                font-size: 0.9rem;
+            }
             footer {
                 text-align: center;
                 margin-top: 2rem;
@@ -100,6 +113,26 @@
                     aria-label="Enter URL to shorten"
                 />
                 <button type="submit">Shorten URL</button>
+
+                <div class="custom-id-toggle">
+                    <label>
+                        <input type="checkbox" id="use-custom-id" />
+                        Use custom identifier
+                    </label>
+                </div>
+
+                <div class="custom-id-container" id="custom-id-container">
+                    <input
+                        type="text"
+                        id="custom-id-input"
+                        name="customId"
+                        placeholder="myLink123"
+                        pattern="[a-zA-Z0-9]{3,10}"
+                        title="3 to 10 alphanumeric characters only"
+                        aria-label="Enter custom identifier"
+                    />
+                    <small>3 to 10 alphanumeric characters only.</small>
+                </div>
             </form>
             <div id="shorten-result"></div>
         </div>
