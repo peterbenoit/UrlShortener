@@ -6,7 +6,7 @@
         "doc": "docs"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
+        "test": "jest",
         "start": "node server.js"
     },
     "keywords": [],
@@ -14,7 +14,10 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
-        "express": "^5.1.0",
-        "@vercel/kv": "^0.2.2"
+        "@vercel/kv": "^0.2.2",
+        "express": "^5.1.0"
+    },
+    "devDependencies": {
+        "jest": "^30.2.0"
     }
 }

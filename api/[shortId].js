@@ -17,10 +17,10 @@ module.exports = async (req, res) => {
 
 	// Check rate limit (30 requests per minute for redirects by default,
 	// but API clients and trusted referrers get higher limits)
-	const isAllowed = checkRateLimit(clientId, 30, req)
+	const isAllowed = await checkRateLimit(clientId, 30, req)
 
 	// Get rate limit headers
-	const rateLimitInfo = getRateLimitInfo(clientId, 30, req)
+	const rateLimitInfo = await getRateLimitInfo(clientId, 30, req)
 
 	// Add rate limit headers
 	res.setHeader('X-RateLimit-Limit', rateLimitInfo.limit.toString())
@@ -51,7 +51,8 @@ module.exports = async (req, res) => {
 			const path = require('path')
 			const indexPath = path.join(__dirname, '../public/index.html')
 			let html = fs.readFileSync(indexPath, 'utf8')
-			html = html.replace('<body>', '<body><div id="shorten-result" style="color:red;text-align:center;margin:1em;">Invalid or expired short URL.</div>')
+			// Assuming there is <div id="shorten-result"></div> in index.html
+			html = html.replace('<div id="shorten-result"></div>', '<div id="shorten-result" style="color:red;font-weight:bold;">Invalid or expired short URL.</div>')
 			res.status(200).setHeader('Content-Type', 'text/html').end(html)
 		}
 	} catch (err) {

@@ -1,10 +1,12 @@
 /**
- * Simple rate limiting implementation with differentiated limits
- * based on client type and configurable limits
+ * Rate limiting implementation with differentiated limits
+ * based on client type and configurable limits, using @vercel/kv with in-memory fallback.
  */
 
-// Rate limit storage (in-memory)
-// { ip: { hits: [{timestamp}], whitelisted: boolean } }
+const { kv } = require('@vercel/kv')
+
+// Rate limit storage fallback (in-memory)
+// { key: { hits: number, expire: timestamp } }
 const rateLimits = {}
 
 // Default cleanup interval (1 minute)
@@ -77,41 +79,41 @@ function identifyClientType(clientId, req = {}) {
 }
 
 /**
- * Check if a client has exceeded their rate limit
+ * Check if a client has exceeded their rate limit asynchronously using KV.
  * @param {string} clientId - Client identifier (IP or API key)
  * @param {number} [customLimit] - Optional custom limit to override the default
  * @param {Object} [req] - Request object for additional context
- * @returns {boolean} - true if allowed, false if rate limited
+ * @returns {Promise<boolean>} - true if allowed, false if rate limited
  */
-function checkRateLimit(clientId, customLimit, req) {
-	if (!clientId) return true // Allow if no client ID (should never happen)
+async function checkRateLimit(clientId, customLimit, req) {
+	if (!clientId) return true
 
 	const now = Date.now()
 	const clientType = identifyClientType(clientId, req)
 	const config = clientConfigs[clientType]
 
-	// Use custom limit if provided, otherwise use config limit
 	const limit = customLimit || config.limit
 	const window = config.window
 
-	// Initialize client if first request
-	if (!rateLimits[clientId]) {
-		rateLimits[clientId] = { hits: [] }
+	const windowId = Math.floor(now / window)
+	const key = `ratelimit:${clientId}:${windowId}`
+
+	try {
+		// Vercel KV rate logic
+		const hits = await kv.incr(key)
+		if (hits === 1) {
+			await kv.expire(key, Math.ceil(window / 1000))
+		}
+		return hits <= limit
+	} catch (e) {
+		// console.error(`[KV rate limit error]: ${e.message}`)
+		// Fallback to in-memory fixed window
+		if (!rateLimits[key]) {
+			rateLimits[key] = { hits: 0, expire: now + window }
+		}
+		rateLimits[key].hits++
+		return rateLimits[key].hits <= limit
 	}
-
-	// Filter out expired hits
-	rateLimits[clientId].hits = rateLimits[clientId].hits.filter(
-		hit => now - hit < window
-	)
-
-	// Check if client is over limit
-	if (rateLimits[clientId].hits.length >= limit) {
-		return false // Rate limited
-	}
-
-	// Add current hit
-	rateLimits[clientId].hits.push(now)
-	return true // Allowed
 }
 
 /**
@@ -119,9 +121,9 @@ function checkRateLimit(clientId, customLimit, req) {
  * @param {string} clientId - Client identifier (IP or API key)
  * @param {number} [customLimit] - Optional custom limit
  * @param {Object} [req] - Request object for additional context
- * @returns {Object} - Rate limit info: { limit, remaining, reset }
+ * @returns {Promise<Object>} - Rate limit info: { limit, remaining, reset }
  */
-function getRateLimitInfo(clientId, customLimit, req) {
+async function getRateLimitInfo(clientId, customLimit, req) {
 	if (!clientId) {
 		return { limit: 9999, remaining: 9999, reset: Date.now() + 60000 }
 	}
@@ -130,24 +132,24 @@ function getRateLimitInfo(clientId, customLimit, req) {
 	const clientType = identifyClientType(clientId, req)
 	const config = clientConfigs[clientType]
 
-	// Use custom limit if provided, otherwise use config limit
 	const limit = customLimit || config.limit
 	const window = config.window
 
-	if (!rateLimits[clientId]) {
-		return { limit, remaining: limit, reset: now + window }
+	const windowId = Math.floor(now / window)
+	const key = `ratelimit:${clientId}:${windowId}`
+	const reset = (windowId + 1) * window
+
+	try {
+		let hits = await kv.get(key)
+		hits = hits ? parseInt(hits, 10) : 0
+		const remaining = Math.max(0, limit - hits)
+		return { limit, remaining, reset }
+	} catch (e) {
+		// Fallback
+		const hits = rateLimits[key] ? rateLimits[key].hits : 0
+		const remaining = Math.max(0, limit - hits)
+		return { limit, remaining, reset }
 	}
-
-	// Find oldest timestamp within window
-	const hits = rateLimits[clientId].hits.filter(
-		hit => now - hit < window
-	)
-
-	const remaining = Math.max(0, limit - hits.length)
-	const oldestHit = hits.length > 0 ? Math.min(...hits) : now
-	const reset = oldestHit + window
-
-	return { limit, remaining, reset }
 }
 
 /**
@@ -185,26 +187,20 @@ function configureClientType(type, config) {
 	}
 }
 
-// Clean up expired rate limit data periodically
-setInterval(() => {
+// Clean up expired rate limit data periodically for the fallback store
+const cleanupIntervalObj = setInterval(() => {
 	const now = Date.now()
-	Object.keys(rateLimits).forEach(clientId => {
-		// Find the longest window among all client types
-		const longestWindow = Math.max(
-			...Object.values(clientConfigs).map(config => config.window)
-		)
-
-		// Keep only hits within the longest window
-		rateLimits[clientId].hits = rateLimits[clientId].hits.filter(
-			hit => now - hit < longestWindow
-		)
-
-		// Remove client if no recent hits
-		if (rateLimits[clientId].hits.length === 0) {
-			delete rateLimits[clientId]
+	Object.keys(rateLimits).forEach(key => {
+		// Remove client if expired
+		if (now > rateLimits[key].expire) {
+			delete rateLimits[key]
 		}
 	})
 }, CLEANUP_INTERVAL)
+
+function stopCleanup() { // For testing purposes
+	clearInterval(cleanupIntervalObj)
+}
 
 module.exports = {
 	checkRateLimit,
@@ -212,5 +208,6 @@ module.exports = {
 	whitelistClient,
 	unwhitelistClient,
 	addTrustedReferrer,
-	configureClientType
+	configureClientType,
+	stopCleanup
 }

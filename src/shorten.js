@@ -23,14 +23,13 @@ function cleanAndValidateUrl(inputUrl) {
 
 	// Lowercase the hostname
 	let host = urlObj.hostname.toLowerCase()
-	// Remove protocol, query, fragment, and normalize pathname
 	let pathname = urlObj.pathname
 	// Remove trailing slash unless root
 	if (pathname.length > 1 && pathname.endsWith('/')) {
 		pathname = pathname.replace(/\/+$/, '')
 	}
-	// Compose cleaned URL: host + pathname
-	const cleaned = host + pathname
+	// Compose cleaned URL: protocol + host + pathname + search + hash
+	const cleaned = urlObj.protocol + '//' + host + pathname + urlObj.search + urlObj.hash
 	return cleaned
 }
 
@@ -88,13 +87,30 @@ async function getShortUrl(originalUrl, shortDomain) {
 	const SHORT_DOMAIN = (shortDomain || 'https://smawl.vercel.app/').replace(/\/+$/, '')
 	const cleaned = cleanAndValidateUrl(originalUrl)
 	if (cleaned instanceof Error) return cleaned
-	const shortId = generateShortId(cleaned)
-	const shortUrl = SHORT_DOMAIN + '/' + shortId
+	let shortId = generateShortId(cleaned)
+	let shortUrl = SHORT_DOMAIN + '/' + shortId
 	if (typeof originalUrl === 'string' && originalUrl.length <= shortUrl.length) {
 		return originalUrl
 	}
 
 	try {
+		let attempts = 0
+		let hashInput = cleaned
+		while (attempts < 5) {
+			const existingUrl = await resolveShortId(shortId)
+			if (!existingUrl) {
+				break // Available slot
+			}
+			if (existingUrl === originalUrl) {
+				return shortUrl // Already exists exactly
+			}
+			// Collision!
+			attempts++
+			hashInput = cleaned + '#' + attempts
+			shortId = generateShortId(hashInput)
+			shortUrl = SHORT_DOMAIN + '/' + shortId
+		}
+
 		// Store mapping in Vercel KV
 		await kv.set(shortId, originalUrl)
 

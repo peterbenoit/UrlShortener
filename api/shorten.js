@@ -30,10 +30,10 @@ module.exports = async (req, res) => {
 
 	// Check rate limit - stricter for shortening (15 per minute by default)
 	// But API clients and trusted referrers get higher limits automatically
-	const isAllowed = checkRateLimit(clientId, 15, req)
+	const isAllowed = await checkRateLimit(clientId, 15, req)
 
 	// Get rate limit info for headers
-	const rateLimitInfo = getRateLimitInfo(clientId, 15, req)
+	const rateLimitInfo = await getRateLimitInfo(clientId, 15, req)
 
 	// Add rate limit headers
 	res.setHeader('X-RateLimit-Limit', rateLimitInfo.limit.toString())
