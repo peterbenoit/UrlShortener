@@ -28,10 +28,20 @@
             background-color: #fff;
         }
 
-        h1 {
+        hgroup {
             text-align: center;
-            color: var(--primary);
             margin-bottom: 2rem;
+        }
+
+        hgroup h1 {
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+        }
+
+        hgroup p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 0;
         }
 
         #shorten-form {
@@ -131,7 +141,10 @@
 
 <body>
     <div class="container">
-        <h1>URL Shortener</h1>
+        <hgroup>
+            <h1>Smawl URL</h1>
+            <p>Shorten URLs with custom identifiers</p>
+        </hgroup>
         <form id="shorten-form" autocomplete="off">
             <input type="url" id="url-input" name="url" required placeholder="https://example.com"
                 aria-label="Enter URL to shorten" />
