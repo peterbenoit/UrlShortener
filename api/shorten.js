@@ -10,9 +10,29 @@ const { checkRateLimit, getRateLimitInfo } = require('../src/rateLimit.js')
  * @param {import('vercel').VercelResponse} res
  */
 module.exports = async (req, res) => {
-	// Enable CORS for API clients
+	const ALLOWED_ORIGINS = [
+		'https://smawl.vercel.app',
+		'http://localhost:3000',
+		'http://127.0.0.1:3000'
+	]
+
+	const origin = req.headers.origin || req.headers.referer
+
+	// If it's a direct API/Server call (no origin/referer) allow it only if they are authenticating with an API key, 
+	// or block by default if we want to be strict. To allow curl commands directly from you, we can permit requests
+	// without an origin, but block explicit foreign browser origins.
+	if (origin) {
+		const isAllowed = ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))
+		if (!isAllowed) {
+			return res.status(403).json({ error: 'Origin not allowed' })
+		}
+		res.setHeader('Access-Control-Allow-Origin', origin)
+	} else {
+		// Fallback for direct API requests (e.g. curl)
+		res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0])
+	}
+
 	res.setHeader('Access-Control-Allow-Credentials', 'true')
-	res.setHeader('Access-Control-Allow-Origin', '*')
 	res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
 	res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-API-Key')
 
@@ -54,12 +74,17 @@ module.exports = async (req, res) => {
 
 	let url, customId
 	try {
+		if (!req.headers['content-type']?.includes('application/json')) {
+			throw new Error('Unsupported Media Type: must be application/json')
+		}
+
 		url = req.body && req.body.url
 		customId = req.body && req.body.customId
-		if (!url) throw new Error('Missing url')
+
+		if (typeof url !== 'string' || !url.trim()) throw new Error('Missing or invalid url')
+		if (customId !== undefined && typeof customId !== 'string') throw new Error('Custom ID must be a string')
 	} catch (e) {
-		res.status(400).json({ error: 'Invalid request body' })
-		return
+		return res.status(400).json({ error: e.message || 'Invalid request body' })
 	}
 
 	try {

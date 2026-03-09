@@ -14,7 +14,6 @@
         }
 
         body {
-            max-width: 800px;
             margin: 0 auto;
             padding: 1rem;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
@@ -36,19 +35,22 @@
         }
 
         #shorten-form {
-            display: grid;
-            grid-template-columns: 1fr auto;
+            display: flex;
+            align-items: center;
             gap: 0.5rem;
-        }
-
-        @media (max-width: 600px) {
-            #shorten-form {
-                grid-template-columns: 1fr;
-            }
+            flex-wrap: wrap;
         }
 
         #url-input {
-            width: 100%;
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 0px;
+        }
+
+        #shorten-form button {
+            width: auto;
+            margin-bottom: 0px;
+            white-space: nowrap;
         }
 
         #shorten-result {
@@ -94,11 +96,8 @@
         }
 
         .custom-id-wrapper {
-            grid-column: 1 / -1;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
         }
 
         .custom-id-wrapper>label {
@@ -109,8 +108,7 @@
 
         .custom-id-container {
             display: none;
-            flex: 1;
-            min-width: 200px;
+            width: 150px;
         }
 
         .custom-id-container.visible {
@@ -118,6 +116,7 @@
         }
 
         .custom-id-container input {
+            width: 100%;
             margin-bottom: 0;
         }
 
@@ -136,6 +135,13 @@
         <form id="shorten-form" autocomplete="off">
             <input type="url" id="url-input" name="url" required placeholder="https://example.com"
                 aria-label="Enter URL to shorten" />
+
+            <div class="custom-id-container" id="custom-id-container">
+                <input type="text" id="custom-id-input" name="customId" placeholder="myLink123"
+                    pattern="[a-zA-Z0-9]{3,10}" maxlength="10" title="3 to 10 alphanumeric characters only"
+                    aria-label="Enter custom identifier" />
+            </div>
+
             <button type="submit">Shorten URL</button>
 
             <div class="custom-id-wrapper">
@@ -143,11 +149,6 @@
                     <input type="checkbox" id="use-custom-id" />
                     Use custom identifier
                 </label>
-                <div class="custom-id-container" id="custom-id-container">
-                    <input type="text" id="custom-id-input" name="customId" placeholder="myLink123"
-                        pattern="[a-zA-Z0-9]{3,10}" maxlength="10" title="3 to 10 alphanumeric characters only"
-                        aria-label="Enter custom identifier" />
-                </div>
             </div>
         </form>
         <div id="shorten-result"></div>

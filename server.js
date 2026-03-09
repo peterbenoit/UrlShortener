@@ -19,7 +19,23 @@ app.use(express.json())
 
 // Add CORS middleware for API endpoints
 app.use('/shorten', (req, res, next) => {
-	res.header('Access-Control-Allow-Origin', '*')
+	const ALLOWED_ORIGINS = [
+		'https://smawl.vercel.app',
+		'http://localhost:3000',
+		'http://127.0.0.1:3000'
+	]
+
+	const origin = req.headers.origin || req.headers.referer
+	if (origin) {
+		const isAllowed = ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))
+		if (!isAllowed) {
+			return res.status(403).json({ error: 'Origin not allowed' })
+		}
+		res.header('Access-Control-Allow-Origin', origin)
+	} else {
+		res.header('Access-Control-Allow-Origin', ALLOWED_ORIGINS[0])
+	}
+
 	res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
 	res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
 	if (req.method === 'OPTIONS') {
@@ -61,16 +77,15 @@ app.get('/:shortId', async (req, res, next) => {
 // POST /shorten endpoint
 app.post('/shorten', async (req, res) => {
 	try {
-		console.log('[shorten] body:', req.body)
-		const { url, customId } = req.body || {}
-		if (!url || typeof url !== 'string') {
-			console.warn(`[${new Date().toISOString()}] [400] Invalid or missing URL field:`, url)
-			return res.status(400).json({ error: 'Missing or invalid URL.' })
+		if (!req.headers['content-type']?.includes('application/json')) {
+			return res.status(400).json({ error: 'Unsupported Media Type: must be application/json' })
 		}
-		// Basic input validation: must look like a URL
-		if (!/^https?:\/\/.+\..+/.test(url.trim())) {
-			console.warn(`[${new Date().toISOString()}] [400] Malformed URL:`, url)
-			return res.status(400).json({ error: 'Malformed URL.' })
+		const { url, customId } = req.body || {}
+		if (typeof url !== 'string' || !url.trim()) {
+			return res.status(400).json({ error: 'Missing or invalid url' })
+		}
+		if (customId !== undefined && typeof customId !== 'string') {
+			return res.status(400).json({ error: 'Custom ID must be a string' })
 		}
 
 		// Now using async/await with the updated getShortUrl function

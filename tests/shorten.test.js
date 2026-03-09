@@ -49,6 +49,25 @@ describe('shorten.js utilities', () => {
             expect(cleanAndValidateUrl(null)).toBeInstanceOf(Error);
             expect(cleanAndValidateUrl('')).toBeInstanceOf(Error);
         });
+
+        it('should block URLs longer than 2048 characters', () => {
+            const massiveUrl = 'https://example.com/' + 'a'.repeat(2100);
+            expect(cleanAndValidateUrl(massiveUrl)).toBeInstanceOf(Error);
+        });
+
+        it('should gracefully reject invalid protocols and CSRF formats', () => {
+            const res1 = cleanAndValidateUrl('javascript:alert(1)');
+            expect(res1).toBeInstanceOf(Error);
+            expect(res1.message).toMatch(/Only HTTP/i);
+
+            const res2 = cleanAndValidateUrl('file:///etc/passwd');
+            expect(res2).toBeInstanceOf(Error);
+        });
+
+        it('should cleanly accept localhost for local deployment routing', () => {
+            const res = cleanAndValidateUrl('http://localhost:3000/test');
+            expect(res).toBe('http://localhost/test');
+        });
     });
 
     describe('base62Encode', () => {

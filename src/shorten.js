@@ -11,12 +11,30 @@ function cleanAndValidateUrl(inputUrl) {
 	if (typeof inputUrl !== 'string' || !inputUrl.trim()) {
 		return new Error('Input must be a non-empty string')
 	}
+	if (inputUrl.length > 2048) {
+		return new Error('URL exceeds maximum length of 2048 characters')
+	}
 	let urlObj
 	try {
-		// Ensure protocol for parsing
 		let tempUrl = inputUrl.trim()
-		if (!/^https?:\/\//i.test(tempUrl)) tempUrl = 'http://' + tempUrl
+		// If it doesn't strictly start with http or https, force it
+		if (!/^https?:\/\//i.test(tempUrl)) {
+			// Prevent overriding with other malicious protocols like javascript:
+			if (/^[a-zA-Z]+:/.test(tempUrl)) {
+				return new Error('Only HTTP and HTTPS protocols are allowed')
+			}
+			tempUrl = 'http://' + tempUrl
+		}
 		urlObj = new URL(tempUrl)
+
+		if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+			return new Error('Only HTTP and HTTPS protocols are supported')
+		}
+
+		// Basic sanity check for TLD (or localhost mapping)
+		if (!urlObj.hostname.includes('.') && urlObj.hostname !== 'localhost') {
+			return new Error('Invalid URL domain format')
+		}
 	} catch (e) {
 		return new Error('Invalid URL format')
 	}
