@@ -11,3 +11,5 @@ scripts
 .env.development
 .env.production
 .env.test
+.DS_Store
+*.py
