@@ -148,9 +148,13 @@ function checkQueryParam() {
 	const urlToShorten = params.get('shorten')
 	if (!urlToShorten) return
 
+	// Browsers split the fragment off into location.hash before JS can read it,
+	// so re-attach it to reconstruct the full URL (e.g. .../#palette=...)
+	const fullUrl = urlToShorten + window.location.hash
+
 	const input = document.getElementById('url-input')
 	if (input) {
-		input.value = urlToShorten
+		input.value = fullUrl
 		document.getElementById('shorten-form').requestSubmit()
 	}
 
