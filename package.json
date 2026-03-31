@@ -1,23 +1,23 @@
 {
-    "name": "urlshortener",
-    "version": "1.0.0",
-    "main": "server.js",
-    "directories": {
-        "doc": "docs"
-    },
-    "scripts": {
-        "test": "jest",
-        "start": "node server.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "description": "",
-    "dependencies": {
-        "@vercel/kv": "^0.2.2",
-        "express": "^5.1.0"
-    },
-    "devDependencies": {
-        "jest": "^30.2.0"
-    }
+	"name": "urlshortener",
+	"version": "1.1.0",
+	"main": "server.js",
+	"directories": {
+		"doc": "docs"
+	},
+	"scripts": {
+		"test": "jest",
+		"start": "node server.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@vercel/kv": "^0.2.2",
+		"express": "^5.1.0"
+	},
+	"devDependencies": {
+		"jest": "^30.2.0"
+	}
 }
