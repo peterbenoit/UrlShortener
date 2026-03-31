@@ -12,13 +12,14 @@ const { checkRateLimit, getRateLimitInfo } = require('../src/rateLimit.js')
 module.exports = async (req, res) => {
 	const ALLOWED_ORIGINS = [
 		'https://smawl.vercel.app',
+		'https://visual-chromatics.vercel.app',
 		'http://localhost:3000',
 		'http://127.0.0.1:3000'
 	]
 
 	const origin = req.headers.origin || req.headers.referer
 
-	// If it's a direct API/Server call (no origin/referer) allow it only if they are authenticating with an API key, 
+	// If it's a direct API/Server call (no origin/referer) allow it only if they are authenticating with an API key,
 	// or block by default if we want to be strict. To allow curl commands directly from you, we can permit requests
 	// without an origin, but block explicit foreign browser origins.
 	if (origin) {
