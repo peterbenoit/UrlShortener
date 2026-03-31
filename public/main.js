@@ -143,4 +143,23 @@ function copyToClipboard(text, container) {
 	)
 }
 
-document.addEventListener('DOMContentLoaded', initShortenForm)
+function checkQueryParam() {
+	const params = new URLSearchParams(window.location.search)
+	const urlToShorten = params.get('shorten')
+	if (!urlToShorten) return
+
+	const input = document.getElementById('url-input')
+	if (input) {
+		input.value = urlToShorten
+		document.getElementById('shorten-form').requestSubmit()
+	}
+
+	// Clean the query param from the address bar without a page reload
+	const cleanUrl = window.location.pathname
+	window.history.replaceState(null, '', cleanUrl)
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+	initShortenForm()
+	checkQueryParam()
+})
