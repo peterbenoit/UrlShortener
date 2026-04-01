@@ -1,5 +1,32 @@
 // main.js - Handles frontend form and fetches short URL
 
+const LS_KEY = 'smawl:links'
+
+function getLSLinks() {
+	try {
+		return JSON.parse(localStorage.getItem(LS_KEY) || '[]')
+	} catch {
+		return []
+	}
+}
+
+function setLSLinks(links) {
+	localStorage.setItem(LS_KEY, JSON.stringify(links))
+}
+
+/**
+ * Upsert a link entry into localStorage.
+ * If the shortId already exists, skips (idempotent).
+ */
+function saveLinkToLS(originalUrl, shortUrl) {
+	const shortId = shortUrl.split('/').pop()
+	if (!shortId) return
+	const links = getLSLinks()
+	if (links.some(l => l.shortId === shortId)) return
+	links.unshift({ shortId, originalUrl, shortUrl, createdAt: Date.now(), label: '' })
+	setLSLinks(links)
+}
+
 /**
  * Initialize form event binding for URL shortener
  */
@@ -56,6 +83,8 @@ function initShortenForm() {
 			const data = await resp.json()
 			if (resp.ok && data.shortUrl) {
 				displayResult(resultDiv, data.shortUrl)
+				saveLinkToLS(url, data.shortUrl)
+				if (typeof loadMyLinks === 'function') loadMyLinks()
 			} else {
 				resultDiv.textContent = data.error || 'Failed to shorten URL.'
 			}

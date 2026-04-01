@@ -1,6 +1,7 @@
 // Handle GET requests to /api/[shortId]
 // Redirects to original URL or returns 404
 
+const { kv } = require('@vercel/kv')
 const { resolveShortId } = require('../src/shorten.js')
 const { checkRateLimit, getRateLimitInfo } = require('../src/rateLimit.js')
 
@@ -43,6 +44,8 @@ module.exports = async (req, res) => {
 	try {
 		const url = await resolveShortId(shortId)
 		if (url) {
+			// Fire-and-forget click increment — does not block the redirect
+			kv.incr('clicks:' + shortId).catch(() => { })
 			res.writeHead(302, { Location: url })
 			res.end()
 		} else {
