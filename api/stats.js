@@ -67,10 +67,18 @@ module.exports = async (req, res) => {
 	}
 
 	try {
-		const counts = await Promise.all(ids.map(id => kv.get('clicks:' + id)))
+		const [counts, refMaps, deviceMaps] = await Promise.all([
+			Promise.all(ids.map(id => kv.get('clicks:' + id))),
+			Promise.all(ids.map(id => kv.hgetall('ref_counts:' + id))),
+			Promise.all(ids.map(id => kv.hgetall('device_counts:' + id)))
+		])
 		const result = {}
 		ids.forEach((id, i) => {
-			result[id] = { clicks: Number(counts[i]) || 0 }
+			result[id] = {
+				clicks: Number(counts[i]) || 0,
+				refs: refMaps[i] || {},
+				devices: deviceMaps[i] || {}
+			}
 		})
 		res.status(200).json(result)
 	} catch (err) {

@@ -6,20 +6,22 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Smawl</title>
 	<meta name="description"
-		content="A fast, simple URL shortener. Paste a long URL, get a short one. Custom IDs supported." />
+		content="Private URL shortening with click analytics. Your link history stays in your browser — nothing stored on our servers." />
 	<meta name="author" content="Peter Benoit" />
 	<meta name="robots" content="index, follow" />
 
 	<!-- Open Graph -->
 	<meta property="og:title" content="Smawl" />
-	<meta property="og:description" content="A fast, simple URL shortener. Paste a long URL, get a short one." />
+	<meta property="og:description"
+		content="Private URL shortening with click analytics. Your link history stays in your browser — nothing stored on our servers." />
 	<meta property="og:type" content="website" />
 	<meta property="og:image" content="/icons/og-image.jpg" />
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Smawl" />
-	<meta name="twitter:description" content="A fast, simple URL shortener. Paste a long URL, get a short one." />
+	<meta name="twitter:description"
+		content="Private URL shortening with click analytics. Your link history stays in your browser — nothing stored on our servers." />
 	<meta name="twitter:image" content="/icons/og-image.jpg" />
 
 	<!-- Favicon & Icons -->
@@ -29,8 +31,8 @@
 	<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
 	<link rel="manifest" href="/site.webmanifest" />
 	<meta name="msapplication-TileImage" content="/icons/mstile-150x150.png" />
-	<meta name="msapplication-TileColor" content="#0f172a" />
-	<meta name="theme-color" content="#0f172a" />
+	<meta name="msapplication-TileColor" content="#f8fafc" />
+	<meta name="theme-color" content="#f8fafc" />
 
 	<!-- Fonts -->
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -73,7 +75,7 @@
 			opacity: 0;
 			transition: opacity 0.3s;
 			font-size: 0.85rem;
-			color: #4ade80;
+			color: #16a34a;
 			margin-top: 0.4rem;
 		}
 
@@ -94,9 +96,9 @@
 			display: inline-flex;
 			align-items: center;
 			gap: 0.35rem;
-			background: rgb(51 65 85 / 0.8);
-			color: #e2e8f0;
-			border: 1px solid rgb(71 85 105);
+			background: rgb(241 245 249);
+			color: #334155;
+			border: 1px solid rgb(203 213 225);
 			border-radius: 0.6rem;
 			font-size: 0.8rem;
 			padding: 0.35rem 0.85rem;
@@ -106,8 +108,8 @@
 		}
 
 		.copy-button:hover {
-			background: rgb(71 85 105);
-			border-color: rgb(100 116 139);
+			background: rgb(226 232 240);
+			border-color: rgb(148 163 184);
 		}
 
 		/* Table: stats cards */
@@ -116,21 +118,22 @@
 			min-width: 110px;
 			padding: 1rem 1.2rem;
 			border-radius: 0.75rem;
-			background: #0f172a;
-			border: 1px solid rgb(51 65 85);
+			background: #ffffff;
+			border: 1px solid rgb(226 232 240);
 			text-align: center;
+			box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
 		}
 
 		.stats-card .stats-value {
 			font-family: 'Outfit', sans-serif;
 			font-size: 1.75rem;
 			font-weight: 700;
-			color: #e2e8f0;
+			color: #0f172a;
 			line-height: 1;
 		}
 
 		.stats-card .stats-value a {
-			color: #60a5fa;
+			color: #d97706;
 			text-decoration: none;
 		}
 
@@ -162,12 +165,12 @@
 		#my-links-table-container td {
 			padding: 0.6rem 0.85rem;
 			text-align: left;
-			border-bottom: 1px solid rgb(51 65 85 / 0.5);
+			border-bottom: 1px solid rgb(226 232 240);
 		}
 
 		#my-links-table-container th {
 			font-weight: 600;
-			color: #94a3b8;
+			color: #475569;
 			white-space: nowrap;
 			user-select: none;
 			font-size: 0.75rem;
@@ -176,17 +179,17 @@
 		}
 
 		#my-links-table-container th:hover {
-			color: #fbbf24;
+			color: #d97706;
 			cursor: pointer;
 		}
 
 		#my-links-table-container td {
-			color: #cbd5e1;
+			color: #374151;
 			vertical-align: middle;
 		}
 
 		#my-links-table-container td a {
-			color: #60a5fa;
+			color: #d97706;
 			text-decoration: none;
 		}
 
@@ -195,7 +198,7 @@
 		}
 
 		#my-links-table-container tr:hover td {
-			background: rgb(30 41 59 / 0.4);
+			background: rgb(248 250 252);
 		}
 
 		.link-label {
@@ -203,20 +206,20 @@
 			min-width: 70px;
 			border-radius: 4px;
 			padding: 1px 5px;
-			color: #94a3b8;
+			color: #64748b;
 			font-style: italic;
 			transition: background 0.15s, outline 0.15s;
 		}
 
 		.link-label:empty::before {
 			content: 'add label…';
-			color: #475569;
+			color: #94a3b8;
 		}
 
 		.link-label:focus {
 			outline: 1px solid #f59e0b;
 			background: rgb(245 158 11 / 0.08);
-			color: #e2e8f0;
+			color: #0f172a;
 			font-style: normal;
 		}
 
@@ -245,42 +248,42 @@
 		}
 
 		.btn-copy {
-			background: rgb(30 41 59);
-			color: #cbd5e1;
-			border-color: rgb(51 65 85);
+			background: rgb(248 250 252);
+			color: #475569;
+			border-color: rgb(226 232 240);
 		}
 
 		.btn-copy:hover {
-			background: rgb(51 65 85);
+			background: rgb(241 245 249);
 		}
 
 		.btn-qr {
-			background: rgb(96 165 250 / 0.1);
-			color: #60a5fa;
-			border-color: rgb(96 165 250 / 0.25);
+			background: rgb(217 119 6 / 0.1);
+			color: #d97706;
+			border-color: rgb(217 119 6 / 0.25);
 		}
 
 		.btn-qr:hover {
-			background: rgb(96 165 250 / 0.2);
-			border-color: rgb(96 165 250 / 0.5);
+			background: rgb(217 119 6 / 0.15);
+			border-color: rgb(217 119 6 / 0.5);
 		}
 
 		.btn-remove {
 			background: transparent;
-			color: #f87171;
+			color: #dc2626;
 			border-color: rgb(239 68 68 / 0.3);
 		}
 
 		.btn-remove:hover {
-			background: rgb(239 68 68 / 0.15);
-			border-color: #f87171;
+			background: rgb(239 68 68 / 0.1);
+			border-color: #dc2626;
 		}
 
 		/* QR modal */
 		#qr-modal-overlay {
 			position: fixed;
 			inset: 0;
-			background: rgb(2 6 23 / 0.75);
+			background: rgb(15 23 42 / 0.5);
 			backdrop-filter: blur(4px);
 			display: flex;
 			align-items: center;
@@ -293,14 +296,14 @@
 		}
 
 		#qr-modal-box {
-			background: #0f172a;
-			border: 1px solid rgb(51 65 85);
+			background: #ffffff;
+			border: 1px solid rgb(226 232 240);
 			border-radius: 1.25rem;
 			padding: 2rem;
 			text-align: center;
 			max-width: 300px;
 			width: 90%;
-			box-shadow: 0 20px 60px rgb(0 0 0 / 0.5);
+			box-shadow: 0 20px 60px rgb(0 0 0 / 0.12);
 		}
 
 		#qr-canvas-container canvas,
@@ -323,16 +326,16 @@
 			padding: 0.4rem 1.4rem;
 			border-radius: 0.6rem;
 			font-size: 0.8rem;
-			background: rgb(30 41 59);
-			color: #cbd5e1;
-			border: 1px solid rgb(51 65 85);
+			background: rgb(241 245 249);
+			color: #374151;
+			border: 1px solid rgb(226 232 240);
 			cursor: pointer;
 			font-family: 'Inter', sans-serif;
 			transition: background 0.15s;
 		}
 
 		#qr-modal-close:hover {
-			background: rgb(51 65 85);
+			background: rgb(226 232 240);
 		}
 
 		/* Bento card hover accent */
@@ -341,12 +344,12 @@
 		}
 
 		.bento-card:hover {
-			border-color: rgb(245 158 11 / 0.3);
+			border-color: rgb(245 158 11 / 0.5);
 		}
 
 		/* Short URL result link */
 		#shorten-result a {
-			color: #fbbf24;
+			color: #d97706;
 			font-weight: 600;
 			text-decoration: none;
 			font-size: 1rem;
@@ -359,8 +362,25 @@
 		.table-empty {
 			padding: 2.5rem 1.5rem;
 			text-align: center;
-			color: #475569;
+			color: #64748b;
 			font-size: 0.875rem;
+		}
+
+		.btn-clicks-detail {
+			background: none;
+			border: none;
+			color: inherit;
+			font: inherit;
+			cursor: pointer;
+			text-decoration: underline dotted rgb(100 116 139);
+			text-underline-offset: 2px;
+			padding: 0;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.btn-clicks-detail:hover {
+			color: #d97706;
+			text-decoration-color: #d97706;
 		}
 	</style>
 
@@ -369,63 +389,141 @@
 	<script>window.dataLayer = window.dataLayer || []; function gtag() { dataLayer.push(arguments); } gtag('js', new Date()); gtag('config', 'G-GQEC09BG5Z');</script>
 </head>
 
-<body class="bg-slate-950 text-slate-200 min-h-screen">
+<body class="bg-slate-50 text-slate-900 min-h-screen relative overflow-x-hidden">
+
+	<!-- Background gradient orbs -->
+	<div class="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+		<div class="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-amber-400/20 blur-[120px]"></div>
+		<div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-orange-400/15 blur-[120px]"></div>
+	</div>
 
 	<!-- QR modal -->
 	<div id="qr-modal-overlay" hidden>
-		<div id="qr-modal-box">
+		<div id="qr-modal-box" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
+			<p id="qr-modal-title" class="font-outfit font-semibold text-slate-900 text-base mb-3">QR Code</p>
 			<div id="qr-canvas-container"></div>
 			<p id="qr-modal-url"></p>
 			<button id="qr-modal-close">Close</button>
 		</div>
 	</div>
 
-	<div class="w-full max-w-4xl mx-auto px-4 pt-8 pb-16 flex flex-col gap-5">
+	<div class="relative z-10 w-full max-w-4xl mx-auto px-4 pt-8 pb-16 flex flex-col gap-5">
 
 		<!-- Shortener panel -->
-		<div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+		<div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
 			<div class="flex items-start justify-between mb-5">
 				<div>
-					<h1 class="font-outfit font-bold text-2xl text-white tracking-tight">Smawl</h1>
-					<p class="text-slate-500 text-sm mt-0.5">Shorten a URL. Links are saved in your browser.</p>
+					<div class="flex items-center gap-3 mb-1">
+						<div
+							class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+								stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+								<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+							</svg>
+						</div>
+						<h1 class="font-outfit font-bold text-3xl tracking-tight text-slate-900">Sma<span
+								class="bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">wl</span>
+						</h1>
+					</div>
+					<p class="text-slate-600 text-sm mt-1">Private URL shortening. Your links never leave your browser.
+					</p>
+					<p class="text-slate-400 text-xs mt-0.5">We never store your URLs on our servers — everything stays
+						on your device.</p>
 				</div>
+				<a href="https://peterbenoit.com" target="_blank" rel="noopener noreferrer"
+					class="text-xs text-slate-400 hover:text-amber-500 transition-colors shrink-0 mt-1">by Peter
+					Benoit</a>
 			</div>
 
 			<form id="shorten-form" autocomplete="off" class="flex flex-col gap-3">
 				<div class="flex gap-2 flex-wrap">
 					<input type="url" id="url-input" name="url" required
 						placeholder="https://example.com/very/long/path/to/something" aria-label="Enter URL to shorten"
-						class="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/70 focus:ring-1 focus:ring-blue-500/20 text-sm" />
+						class="flex-1 min-w-0 bg-white border border-slate-300 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500/70 focus:ring-1 focus:ring-amber-500/20 text-sm" />
 					<button type="submit"
-						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm bg-blue-600 hover:bg-blue-500 text-white whitespace-nowrap">
+						class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-colors text-sm bg-amber-500 hover:bg-amber-400 text-white whitespace-nowrap">
 						Shorten
 					</button>
 				</div>
 				<div class="flex items-center gap-3">
-					<label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer select-none">
-						<input type="checkbox" id="use-custom-id" class="rounded accent-blue-500" />
+					<label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+						<input type="checkbox" id="use-custom-id" class="rounded accent-amber-500" />
 						Use custom ID
 					</label>
 					<div class="custom-id-container" id="custom-id-container">
 						<input type="text" id="custom-id-input" name="customId" placeholder="myLink123"
 							pattern="[a-zA-Z0-9]{3,10}" maxlength="10" title="3 to 10 alphanumeric characters only"
 							aria-label="Enter custom identifier"
-							class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500/70 text-sm w-40" />
+							class="bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500/70 text-sm w-40" />
 					</div>
 				</div>
 			</form>
 
-			<div id="shorten-result" class="mt-4 text-center text-sm break-all"></div>
+			<div id="shorten-result" class="mt-4 text-center text-sm break-all" aria-live="polite" aria-atomic="true">
+			</div>
+		</div>
+
+		<!-- How it works -->
+		<div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+			<h2 class="font-outfit font-semibold text-base text-slate-900 mb-4">How it works</h2>
+			<div class="grid grid-cols-3 gap-4">
+				<div class="flex flex-col items-center text-center gap-2">
+					<div
+						class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+							<rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+						</svg>
+					</div>
+					<div>
+						<p class="font-medium text-slate-800 text-sm">Paste your URL</p>
+						<p class="text-slate-500 text-xs mt-0.5">Drop in any long link</p>
+					</div>
+				</div>
+				<div class="flex flex-col items-center text-center gap-2">
+					<div
+						class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+							<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+						</svg>
+					</div>
+					<div>
+						<p class="font-medium text-slate-800 text-sm">Get a short link</p>
+						<p class="text-slate-500 text-xs mt-0.5">Instant, shareable URL</p>
+					</div>
+				</div>
+				<div class="flex flex-col items-center text-center gap-2">
+					<div
+						class="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+						</svg>
+					</div>
+					<div>
+						<p class="font-medium text-slate-800 text-sm">Track your clicks</p>
+						<p class="text-slate-500 text-xs mt-0.5">Analytics stay private</p>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<!-- Stats row — always visible -->
-		<div id="my-links-stats-cards" class="grid grid-cols-3 gap-4"></div>
+		<div id="my-links-stats-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
 
 		<!-- My Links table panel — always visible -->
 		<section id="my-links-section">
-			<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-				<div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-					<h2 class="font-outfit font-semibold text-base text-white">My Links</h2>
+			<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+				<div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+					<div>
+						<h2 class="font-outfit font-semibold text-base text-slate-900">My Links</h2>
+						<p class="text-slate-400 text-xs mt-0.5">Stored in your browser. Clearing browser data will
+							remove them.</p>
+					</div>
 					<div id="my-links-actions-bar"></div>
 				</div>
 				<div id="my-links-table-container"></div>
@@ -435,7 +533,7 @@
 		<!-- Footer -->
 		<footer class="text-center text-xs text-slate-500 pt-2">
 			Built by <a href="https://peterbenoit.com" target="_blank" rel="noopener noreferrer"
-				class="text-slate-400 hover:text-slate-200 transition-colors">Peter Benoit</a>.
+				class="text-slate-600 hover:text-slate-900 transition-colors">Peter Benoit</a>.
 			&copy; 2026.
 		</footer>
 

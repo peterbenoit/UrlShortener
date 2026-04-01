@@ -292,12 +292,12 @@ function renderTable(links, stats) {
 			<td><a href="${escapeHtml(entry.shortUrl)}" target="_blank" rel="noopener">${escapeHtml(entry.shortId)}</a></td>
 			<td title="${escapeHtml(entry.originalUrl)}">${escapeHtml(destDisplay)}</td>
 			<td><span class="link-label" contenteditable="true" data-id="${escapeHtml(entry.shortId)}">${escapeHtml(entry.label || '')}</span></td>
-			<td class="col-clicks">${clicks.toLocaleString()}</td>
+		<td class="col-clicks"><button class="btn-clicks-detail" data-id="${escapeHtml(entry.shortId)}">${clicks.toLocaleString()}</button></td>
 			<td>${escapeHtml(created)}</td>
 			<td class="col-actions">
-				<button class="action-btn btn-copy" data-url="${escapeHtml(entry.shortUrl)}">Copy</button>
-				<button class="action-btn btn-qr" data-url="${escapeHtml(entry.shortUrl)}">QR</button>
-				<button class="action-btn btn-remove" data-id="${escapeHtml(entry.shortId)}">✕</button>
+				<button class="action-btn btn-copy" data-url="${escapeHtml(entry.shortUrl)}" aria-label="Copy short link for ${escapeHtml(entry.shortId)}">Copy</button><span class="share-success" style="margin-left:0.3rem"></span>
+				<button class="action-btn btn-qr" data-url="${escapeHtml(entry.shortUrl)}" aria-label="Show QR code for ${escapeHtml(entry.shortId)}">QR</button>
+				<button class="action-btn btn-remove" data-id="${escapeHtml(entry.shortId)}" aria-label="Remove ${escapeHtml(entry.shortId)} from my links">✕</button>
 			</td>
 		</tr>`
 	})
@@ -339,7 +339,17 @@ function renderTable(links, stats) {
 	// Copy button
 	container.querySelectorAll('.btn-copy').forEach(btn => {
 		btn.addEventListener('click', () => {
-			navigator.clipboard.writeText(btn.dataset.url).catch(() => { })
+			const feedbackSpan = btn.nextElementSibling
+			navigator.clipboard.writeText(btn.dataset.url).then(
+				() => {
+					if (feedbackSpan && feedbackSpan.classList.contains('share-success')) {
+						feedbackSpan.textContent = 'Copied!'
+						feedbackSpan.classList.add('visible')
+						setTimeout(() => feedbackSpan.classList.remove('visible'), 2000)
+					}
+				},
+				() => { /* silent fail */ }
+			)
 		})
 	})
 
@@ -356,6 +366,47 @@ function renderTable(links, stats) {
 	container.querySelectorAll('.btn-qr').forEach(btn => {
 		btn.addEventListener('click', () => {
 			if (typeof showQrModal === 'function') showQrModal(btn.dataset.url)
+		})
+	})
+
+	// Clicks detail toggle
+	container.querySelectorAll('.btn-clicks-detail').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const id = btn.dataset.id
+			const row = btn.closest('tr')
+			const existing = row.nextElementSibling
+			if (existing && existing.classList.contains('detail-row')) {
+				existing.remove()
+				return
+			}
+			const s = cachedStats[id] || {}
+			const refs = s.refs || {}
+			const devices = s.devices || {}
+
+			const refEntries = Object.entries(refs)
+				.map(([d, c]) => [d, Number(c)])
+				.sort((a, b) => b[1] - a[1])
+				.slice(0, 3)
+			const refHtml = refEntries.length > 0
+				? refEntries.map(([d, c]) => `<span style="color:#374151">${escapeHtml(d)}</span> <span style="color:#94a3b8">(${c.toLocaleString()})</span>`).join(' &nbsp;·&nbsp; ')
+				: '<span style="color:#94a3b8">No data yet</span>'
+
+			const mobile = Number(devices.mobile) || 0
+			const desktop = Number(devices.desktop) || 0
+			const bot = Number(devices.bot) || 0
+			const deviceHtml = (mobile + desktop + bot > 0)
+				? `<span style="color:#374151">Desktop ${desktop.toLocaleString()}</span> &nbsp;·&nbsp; <span style="color:#374151">Mobile ${mobile.toLocaleString()}</span> &nbsp;·&nbsp; <span style="color:#64748b">Bot ${bot.toLocaleString()}</span>`
+				: '<span style="color:#94a3b8">No data yet</span>'
+
+			const colCount = row.cells.length
+			const detailRow = document.createElement('tr')
+			detailRow.className = 'detail-row'
+			detailRow.innerHTML = `<td colspan="${colCount}" style="padding:0.6rem 0.85rem 0.75rem;background:rgb(255 251 235);border-bottom:1px solid rgb(226 232 240);">` +
+				`<div style="display:flex;gap:1.5rem;flex-wrap:wrap;font-size:0.75rem;">` +
+				`<div><span style="font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;font-size:0.7rem;">Referrers</span><br><span style="display:inline-block;margin-top:0.2rem;">${refHtml}</span></div>` +
+				`<div><span style="font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;font-size:0.7rem;">Devices</span><br><span style="display:inline-block;margin-top:0.2rem;">${deviceHtml}</span></div>` +
+				`</div></td>`
+			row.insertAdjacentElement('afterend', detailRow)
 		})
 	})
 }
@@ -399,6 +450,9 @@ function showQrModal(url) {
 	const closeBtn = document.getElementById('qr-modal-close')
 	if (!overlay || !container) return
 
+	// Save focus to restore on close
+	const previousFocus = document.activeElement
+
 	container.innerHTML = ''
 	urlLabel.textContent = url
 
@@ -406,6 +460,7 @@ function showQrModal(url) {
 	if (typeof QRCode === 'undefined') {
 		container.textContent = 'QR library not loaded.'
 		overlay.hidden = false
+		closeBtn.focus()
 		return
 	}
 
@@ -413,25 +468,40 @@ function showQrModal(url) {
 		text: url,
 		width: 220,
 		height: 220,
-		colorDark: '#1a1a2e',
+		colorDark: '#0f172a',
 		colorLight: '#ffffff',
 		correctLevel: QRCode.CorrectLevel.M
 	})
 
 	overlay.hidden = false
+	closeBtn.focus()
 
 	function dismiss() {
 		overlay.hidden = true
 		overlay.removeEventListener('click', onOverlayClick)
 		closeBtn.removeEventListener('click', dismiss)
+		document.removeEventListener('keydown', onKeyDown)
+		if (previousFocus && previousFocus.focus) previousFocus.focus()
 	}
 
 	function onOverlayClick(e) {
 		if (e.target === overlay) dismiss()
 	}
 
+	function onKeyDown(e) {
+		if (e.key === 'Escape') {
+			e.preventDefault()
+			dismiss()
+		} else if (e.key === 'Tab') {
+			// Focus trap: only closeBtn is focusable inside the modal
+			e.preventDefault()
+			closeBtn.focus()
+		}
+	}
+
 	overlay.addEventListener('click', onOverlayClick)
 	closeBtn.addEventListener('click', dismiss)
+	document.addEventListener('keydown', onKeyDown)
 }
 
 // --- Phase 5: Personal stats summary cards ---
@@ -450,6 +520,15 @@ function renderStatsCards(links, stats) {
 		if (c > topClicks) { topClicks = c; topLink = l }
 	})
 
+	let topRefDomain = null
+	let topRefCount = 0
+	links.forEach(l => {
+		const refs = (stats[l.shortId] && stats[l.shortId].refs) || {}
+		Object.entries(refs).forEach(([domain, count]) => {
+			if (Number(count) > topRefCount) { topRefCount = Number(count); topRefDomain = domain }
+		})
+	})
+
 	const cards = [
 		{ value: totalLinks.toLocaleString(), label: 'Total Links' },
 		{ value: totalClicks.toLocaleString(), label: 'Total Clicks' },
@@ -459,6 +538,7 @@ function renderStatsCards(links, stats) {
 				: '—',
 			label: 'Top Link'
 		},
+		{ value: topRefDomain ? escapeHtml(topRefDomain) : '—', label: 'Top Source' },
 	]
 
 	container.innerHTML = cards.map(c =>

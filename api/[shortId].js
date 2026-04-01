@@ -46,6 +46,27 @@ module.exports = async (req, res) => {
 		if (url) {
 			// Fire-and-forget click increment — does not block the redirect
 			kv.incr('clicks:' + shortId).catch(() => { })
+
+				// Fire-and-forget referrer and device tracking (non-critical analytics)
+				; (function trackClickDetails() {
+					const refHeader = req.headers['referer'] || req.headers['referrer'] || ''
+					let refDomain = 'direct'
+					if (refHeader) {
+						try { refDomain = new URL(refHeader).hostname || 'direct' } catch { /* ignore malformed */ }
+					}
+					const ua = req.headers['user-agent'] || ''
+					let device = 'desktop'
+					if (/bot|crawl|spider|slurp|bingbot|googlebot|facebookexternalhit|twitterbot|linkedinbot|slackbot|ia_archiver/i.test(ua)) {
+						device = 'bot'
+					} else if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) {
+						device = 'mobile'
+					}
+					Promise.all([
+						kv.hincrby('ref_counts:' + shortId, refDomain, 1),
+						kv.hincrby('device_counts:' + shortId, device, 1)
+					]).catch(() => { })
+				}())
+
 			res.writeHead(302, { Location: url })
 			res.end()
 		} else {
