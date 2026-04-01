@@ -192,7 +192,285 @@ function checkQueryParam() {
 	window.history.replaceState(null, '', cleanUrl)
 }
 
+// --- Phase 3: My Links table ---
+
+let sortState = { col: 'createdAt', dir: 'desc' }
+let cachedStats = {}
+
+function escapeHtml(str) {
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+}
+
+async function loadMyLinks() {
+	const links = getLSLinks()
+	const section = document.getElementById('my-links-section')
+	if (!section) return
+
+	if (links.length === 0) {
+		const tableContainer = document.getElementById('my-links-table-container')
+		if (tableContainer) {
+			tableContainer.innerHTML = '<p class="table-empty">No links yet. Shorten a URL above to get started.</p>'
+		}
+		renderStatsCards([], {})
+		renderActionsBar([], {})
+		return
+	}
+
+	try {
+		const ids = links.map(l => l.shortId).join(',')
+		const resp = await fetch('/api/stats?ids=' + encodeURIComponent(ids))
+		if (resp.ok) {
+			cachedStats = await resp.json()
+		}
+	} catch { /* stats are optional */ }
+
+	renderTable(links, cachedStats)
+	renderStatsCards(links, cachedStats)
+	renderActionsBar(links, cachedStats)
+}
+
+function sortLinks(links, stats) {
+	const { col, dir } = sortState
+	const factor = dir === 'asc' ? 1 : -1
+	return [...links].sort((a, b) => {
+		let av, bv
+		if (col === 'clicks') {
+			av = (stats[a.shortId] && stats[a.shortId].clicks) || 0
+			bv = (stats[b.shortId] && stats[b.shortId].clicks) || 0
+		} else if (col === 'createdAt') {
+			av = a.createdAt
+			bv = b.createdAt
+		} else if (col === 'shortId') {
+			av = a.shortId.toLowerCase()
+			bv = b.shortId.toLowerCase()
+		} else if (col === 'originalUrl') {
+			av = a.originalUrl.toLowerCase()
+			bv = b.originalUrl.toLowerCase()
+		} else if (col === 'label') {
+			av = (a.label || '').toLowerCase()
+			bv = (b.label || '').toLowerCase()
+		}
+		if (av < bv) return -1 * factor
+		if (av > bv) return 1 * factor
+		return 0
+	})
+}
+
+function renderTable(links, stats) {
+	const container = document.getElementById('my-links-table-container')
+	if (!container) return
+
+	const sorted = sortLinks(links, stats)
+	const cols = [
+		{ key: 'shortId', label: 'Short Link' },
+		{ key: 'originalUrl', label: 'Destination' },
+		{ key: 'label', label: 'Label' },
+		{ key: 'clicks', label: 'Clicks' },
+		{ key: 'createdAt', label: 'Created' },
+	]
+
+	let html = '<table><thead><tr>'
+	cols.forEach(c => {
+		const active = sortState.col === c.key
+		const arrow = active ? (sortState.dir === 'asc' ? ' ▲' : ' ▼') : ''
+		html += `<th data-col="${c.key}">${escapeHtml(c.label)}${arrow}</th>`
+	})
+	html += '<th>Actions</th></tr></thead><tbody>'
+
+	sorted.forEach(entry => {
+		const clicks = (stats[entry.shortId] && stats[entry.shortId].clicks) || 0
+		const created = new Date(entry.createdAt).toLocaleDateString()
+		const destDisplay = entry.originalUrl.length > 42
+			? entry.originalUrl.slice(0, 42) + '…'
+			: entry.originalUrl
+
+		html += `<tr data-id="${escapeHtml(entry.shortId)}">
+			<td><a href="${escapeHtml(entry.shortUrl)}" target="_blank" rel="noopener">${escapeHtml(entry.shortId)}</a></td>
+			<td title="${escapeHtml(entry.originalUrl)}">${escapeHtml(destDisplay)}</td>
+			<td><span class="link-label" contenteditable="true" data-id="${escapeHtml(entry.shortId)}">${escapeHtml(entry.label || '')}</span></td>
+			<td class="col-clicks">${clicks.toLocaleString()}</td>
+			<td>${escapeHtml(created)}</td>
+			<td class="col-actions">
+				<button class="action-btn btn-copy" data-url="${escapeHtml(entry.shortUrl)}">Copy</button>
+				<button class="action-btn btn-qr" data-url="${escapeHtml(entry.shortUrl)}">QR</button>
+				<button class="action-btn btn-remove" data-id="${escapeHtml(entry.shortId)}">✕</button>
+			</td>
+		</tr>`
+	})
+
+	html += '</tbody></table>'
+	container.innerHTML = html
+
+	// Sort header clicks
+	container.querySelectorAll('th[data-col]').forEach(th => {
+		th.addEventListener('click', () => {
+			const col = th.dataset.col
+			if (sortState.col === col) {
+				sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc'
+			} else {
+				sortState.col = col
+				sortState.dir = (col === 'createdAt' || col === 'clicks') ? 'desc' : 'asc'
+			}
+			renderTable(getLSLinks(), cachedStats)
+		})
+	})
+
+	// Label editing
+	container.querySelectorAll('.link-label').forEach(span => {
+		span.addEventListener('blur', () => {
+			const id = span.dataset.id
+			const newLabel = span.textContent.trim()
+			const links = getLSLinks()
+			const entry = links.find(l => l.shortId === id)
+			if (entry) {
+				entry.label = newLabel
+				setLSLinks(links)
+			}
+		})
+		span.addEventListener('keydown', e => {
+			if (e.key === 'Enter') { e.preventDefault(); span.blur() }
+		})
+	})
+
+	// Copy button
+	container.querySelectorAll('.btn-copy').forEach(btn => {
+		btn.addEventListener('click', () => {
+			navigator.clipboard.writeText(btn.dataset.url).catch(() => { })
+		})
+	})
+
+	// Remove from LS
+	container.querySelectorAll('.btn-remove').forEach(btn => {
+		btn.addEventListener('click', () => {
+			const id = btn.dataset.id
+			setLSLinks(getLSLinks().filter(l => l.shortId !== id))
+			loadMyLinks()
+		})
+	})
+
+	// QR — wired up in Phase 4
+	container.querySelectorAll('.btn-qr').forEach(btn => {
+		btn.addEventListener('click', () => {
+			if (typeof showQrModal === 'function') showQrModal(btn.dataset.url)
+		})
+	})
+}
+
+// --- Phase 6: Export button ---
+
+function renderActionsBar(links, stats) {
+	const bar = document.getElementById('my-links-actions-bar')
+	if (!bar) return
+
+	bar.innerHTML = ''
+	if (links.length === 0) return
+	const btn = document.createElement('button')
+	btn.textContent = 'Export JSON'
+	btn.className = 'action-btn'
+	btn.addEventListener('click', () => {
+		const data = links.map(l => ({
+			shortId: l.shortId,
+			shortUrl: l.shortUrl,
+			originalUrl: l.originalUrl,
+			label: l.label || '',
+			createdAt: new Date(l.createdAt).toISOString(),
+			clicks: (stats[l.shortId] && stats[l.shortId].clicks) || 0
+		}))
+		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+		const a = document.createElement('a')
+		a.href = URL.createObjectURL(blob)
+		a.download = 'smawl-links.json'
+		a.click()
+		URL.revokeObjectURL(a.href)
+	})
+	bar.appendChild(btn)
+}
+
+// --- Phase 4: QR code modal ---
+
+function showQrModal(url) {
+	const overlay = document.getElementById('qr-modal-overlay')
+	const container = document.getElementById('qr-canvas-container')
+	const urlLabel = document.getElementById('qr-modal-url')
+	const closeBtn = document.getElementById('qr-modal-close')
+	if (!overlay || !container) return
+
+	container.innerHTML = ''
+	urlLabel.textContent = url
+
+	// QRCode is loaded from CDN after main.js, so check at call time
+	if (typeof QRCode === 'undefined') {
+		container.textContent = 'QR library not loaded.'
+		overlay.hidden = false
+		return
+	}
+
+	new QRCode(container, {
+		text: url,
+		width: 220,
+		height: 220,
+		colorDark: '#1a1a2e',
+		colorLight: '#ffffff',
+		correctLevel: QRCode.CorrectLevel.M
+	})
+
+	overlay.hidden = false
+
+	function dismiss() {
+		overlay.hidden = true
+		overlay.removeEventListener('click', onOverlayClick)
+		closeBtn.removeEventListener('click', dismiss)
+	}
+
+	function onOverlayClick(e) {
+		if (e.target === overlay) dismiss()
+	}
+
+	overlay.addEventListener('click', onOverlayClick)
+	closeBtn.addEventListener('click', dismiss)
+}
+
+// --- Phase 5: Personal stats summary cards ---
+
+function renderStatsCards(links, stats) {
+	const container = document.getElementById('my-links-stats-cards')
+	if (!container) return
+
+	const totalLinks = links.length
+	const totalClicks = links.reduce((sum, l) => sum + ((stats[l.shortId] && stats[l.shortId].clicks) || 0), 0)
+
+	let topLink = null
+	let topClicks = 0
+	links.forEach(l => {
+		const c = (stats[l.shortId] && stats[l.shortId].clicks) || 0
+		if (c > topClicks) { topClicks = c; topLink = l }
+	})
+
+	const cards = [
+		{ value: totalLinks.toLocaleString(), label: 'Total Links' },
+		{ value: totalClicks.toLocaleString(), label: 'Total Clicks' },
+		{
+			value: topLink
+				? `<a href="${escapeHtml(topLink.shortUrl)}" target="_blank" rel="noopener">${escapeHtml(topLink.shortId)}</a>`
+				: '—',
+			label: 'Top Link'
+		},
+	]
+
+	container.innerHTML = cards.map(c =>
+		`<div class="stats-card">
+			<div class="stats-value">${c.value}</div>
+			<div class="stats-label">${escapeHtml(c.label)}</div>
+		</div>`
+	).join('')
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 	initShortenForm()
 	checkQueryParam()
+	loadMyLinks()
 })

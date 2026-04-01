@@ -54,8 +54,11 @@ module.exports = async (req, res) => {
 			const path = require('path')
 			const indexPath = path.join(__dirname, '../public/index.html')
 			let html = fs.readFileSync(indexPath, 'utf8')
-			// Assuming there is <div id="shorten-result"></div> in index.html
-			html = html.replace('<div id="shorten-result"></div>', '<div id="shorten-result" style="color:red;font-weight:bold;">Invalid or expired short URL.</div>')
+			// Inject error message into the result div regardless of its attributes
+			html = html.replace(
+				/<div id="shorten-result"[^>]*><\/div>/,
+				'<div id="shorten-result" class="mt-5 text-center text-sm break-all" style="color:#f87171;font-weight:600;">Invalid or expired short URL.</div>'
+			)
 			res.status(200).setHeader('Content-Type', 'text/html').end(html)
 		}
 	} catch (err) {
